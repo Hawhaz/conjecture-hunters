@@ -1,0 +1,7 @@
+{"response": "Subo un nivel la construccion:\n<<<<<<< SEARCH\nNIVEL = 0\n=======\nNIVEL = 1\n>>>>>>> REPLACE\n"}
+{"response": "Agrego cuerdas al ciclo:\n<<<<<<< SEARCH\nNIVEL = 1\n=======\nNIVEL = 2\n>>>>>>> REPLACE\n"}
+{"response": "Mas cuerdas sin pasar grado 3:\n<<<<<<< SEARCH\nNIVEL = 2\n=======\nNIVEL = 3\n>>>>>>> REPLACE\n"}
+{"response": "Cierro a 3-regular:\n<<<<<<< SEARCH\nNIVEL = 3\n=======\nNIVEL = 4\n>>>>>>> REPLACE\n"}
+{"response": "Salto directo al 3-regular optimo:\n<<<<<<< SEARCH\nNIVEL = 0\n=======\nNIVEL = 4\n>>>>>>> REPLACE\n"}
+{"response": "Refino desde nivel intermedio:\n<<<<<<< SEARCH\nNIVEL = 1\n=======\nNIVEL = 4\n>>>>>>> REPLACE\n"}
+{"response": "Refino desde nivel intermedio:\n<<<<<<< SEARCH\nNIVEL = 2\n=======\nNIVEL = 4\n>>>>>>> REPLACE\n"}

@@ -1,0 +1,5 @@
+*.g6 -text
+*.jsonl text eol=lf
+*.py text
+*.md text
+*.yaml text

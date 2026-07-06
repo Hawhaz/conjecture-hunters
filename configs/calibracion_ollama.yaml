@@ -1,0 +1,32 @@
+# Vertical CAL-1 contra Ollama LOCAL (gemma3:4b) — humo pre-GPU.
+# Idéntico a calibracion.yaml salvo api_base/name/timeout (CPU: ~1-2 min/iteración).
+# El día 6: copiar este archivo, poner api_base de Fireworks/vLLM + api_key real. Nada más.
+max_iterations: 1000
+checkpoint_interval: 5
+random_seed: 42
+diff_based_evolution: true
+max_code_length: 20000
+
+llm:
+  models:
+    - name: "gemma3:4b"
+      api_base: "http://localhost:11434/v1"
+      api_key: "ollama"
+      weight: 1.0
+  temperature: 0.7
+  timeout: 600
+  retries: 2
+
+prompt:
+  num_top_programs: 2
+  num_diverse_programs: 1
+
+database:
+  population_size: 20
+  archive_size: 10
+  num_islands: 1
+
+evaluator:
+  timeout: 60
+  cascade_evaluation: false
+  parallel_evaluations: 1

@@ -1,0 +1,10 @@
+numpy>=1.24
+scipy>=1.10
+networkx>=3.0
+fastapi>=0.100
+uvicorn>=0.23
+pytest>=7.4
+hypothesis>=6.80
+pyyaml>=6.0
+httpx>=0.24
+openevolve==0.3.0
