@@ -14,6 +14,14 @@ use std::time::Instant;
 use buscador_rs::ga::{self, Config, Eval};
 
 fn main() {
+    // Subcomando de QA: buscador_rs paridad --corpus X.csv
+    {
+        let raw: Vec<String> = std::env::args().skip(1).collect();
+        if raw.first().map(String::as_str) == Some("paridad") {
+            return subcomando_paridad(&raw[1..]);
+        }
+    }
+
     let mut cfg = Config::default();
     let mut out = String::from("ga_log_rs.csv");
 
@@ -88,10 +96,10 @@ fn main() {
     let elapsed = t0.elapsed().as_secs_f64();
 
     // Escribir CSV (mismo esquema que ga_graphs.py).
-    if let Some(parent) = Path::new(&out).parent() {
-        if !parent.as_os_str().is_empty() {
-            let _ = fs::create_dir_all(parent);
-        }
+    if let Some(parent) = Path::new(&out).parent()
+        && !parent.as_os_str().is_empty()
+    {
+        let _ = fs::create_dir_all(parent);
     }
     let mut f = fs::File::create(&out).unwrap_or_else(|e| {
         eprintln!("no pude crear {out}: {e}");
@@ -139,6 +147,48 @@ fn main() {
     eprintln!("  filas CSV                  : {total_rows}");
     eprintln!("  tiempo                     : {elapsed:.2}s");
     eprintln!("  salida                     : {out}");
+}
+
+fn subcomando_paridad(args: &[String]) {
+    let mut corpus = String::from("../parity/parity_corpus.csv");
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--corpus" {
+            i += 1;
+            if let Some(v) = args.get(i) {
+                corpus = v.clone();
+            }
+        }
+        i += 1;
+    }
+    match buscador_rs::paritycheck::check_corpus(&corpus) {
+        Ok(rep) => {
+            eprintln!("[paridad] corpus={corpus} filas={}", rep.filas);
+            for (k, v) in &rep.max {
+                eprintln!("[paridad] max_abs_diff {k:8} = {v:.3e}");
+            }
+            eprintln!(
+                "[paridad] g6_mismatch={} mu_mismatch={} int_mismatch={} flips={}",
+                rep.g6_mismatch, rep.mu_mismatch, rep.int_mismatch, rep.flips
+            );
+            if let Some(m) = &rep.peor_mismatch {
+                eprintln!("[paridad] mismatch: {m}");
+            }
+            if let Some(f) = &rep.peor_flip {
+                eprintln!("[paridad] FLIP: {f}");
+            }
+            if rep.ok(1e-9) {
+                eprintln!("[paridad] OK: todo < 1e-9, 0 mismatches, 0 flips");
+            } else {
+                eprintln!("[paridad] FALLA");
+                std::process::exit(1);
+            }
+        }
+        Err(e) => {
+            eprintln!("[paridad] error: {e}");
+            std::process::exit(1);
+        }
+    }
 }
 
 fn print_help() {

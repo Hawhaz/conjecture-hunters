@@ -165,6 +165,7 @@ fn nmcs_grafos_conexos(g: &Graph, depth: usize, level: usize, score: Score, rng:
 
 /// AMCS fiel al repo. `max_n` (extensión nuestra): cota superior de orden para
 /// usarlo como baseline del GA con n ∈ [10, 40]. Devuelve el mejor grafo.
+#[allow(clippy::too_many_arguments)] // fiel a la firma de amcs() en amcs_baseline.py
 pub fn amcs(
     score: Score,
     inicial: Graph,

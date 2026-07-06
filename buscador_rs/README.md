@@ -36,6 +36,14 @@ Además, cada `best_g6` que emite el GA se re-evalúa con el oráculo Python:
 `python ../parity/verify_ga_csv.py ../calibracion/runs/ga_log_rs.csv`
 → `max_abs_diff_gap_Py_Rust ≈ 5e-11`, contraejemplos reales, 0 falsos.
 
+Reejecutable sobre cualquier corpus con el subcomando `buscador_rs paridad
+--corpus X.csv`: recomputa cada invariante y reporta max|Δ| por columna, los
+mismatches de μ/diam/k, y **flips** de clasificación (¿contraejemplo sí/no
+difiere Py vs Rust?); sale con código ≠ 0 si algo excede 1e-9. Endurecido con un
+corpus de estrés fresco (4894 g6 nuevos, n≤295, TODAS las estrellas k≤200 y
+completos m≤60 — los detectores de cero exacto): **0 flips, 0 mismatches**.
+`cargo clippy` limpio; math CAL-1/2/3 auditada contra arXiv:2306.07956.
+
 ## Los tres evaluadores
 
 | id | conjetura | gap (>0 ⇔ contraejemplo) |
