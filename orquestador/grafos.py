@@ -432,15 +432,59 @@ def familias_semilla(conj: str) -> list:
     return fams
 
 
+def _semillas_extremal(conj: str, n_min: int, n_max: int) -> List[nx.Graph]:
+    """Semillas GARANTIZADAS de la familia EXTREMAL de cada conjetura, a la
+    escala productiva (RA2: sembrar desde la familia donde la conjetura muere).
+
+    Medido con el binario Rust: CAL-2 muere en dos-estrellas de n grande (~n_max)
+    casi balanceadas (n=40, a=19, b=20 -> gap +0.49); sin este sesgo el muestreo
+    uniforme (banda amplia x 9 familias) casi nunca cae en (n grande x
+    dos-estrellas) y CAL-2 queda sin contraejemplo. CAL-3 usa el esqueleto-cola
+    de diametro alto (su contraejemplo real es n=203, fuera de banda, pero la
+    familia es el prior correcto).
+    """
+    conj = conj.lower().strip()
+    cand: List[nx.Graph] = []
+    if conj == "cal2":
+        for n in (n_max, n_max - 1, n_max - 2):
+            if n < n_min:
+                continue
+            c = (n - 1) // 2
+            for a in (c, c + 1):
+                if 3 <= a <= n - 4:
+                    try:
+                        cand.append(_dos_estrellas(n, a))
+                    except Exception:
+                        pass
+    elif conj == "cal3":
+        for n in (n_max, n_max - 3):
+            if n >= n_min:
+                try:
+                    cand.append(_tail_skeleton_p13(n))
+                except Exception:
+                    pass
+    # CAL-1: lista vacia a proposito (ya cae solo con las familias base; no
+    # perturbar su trayectoria determinista ni su consumo de rng).
+    return cand[:4]
+
+
 def semillas(conj: str, rng, cantidad: int,
              n_min: int = N_MIN, n_max: int = N_MAX) -> List[nx.Graph]:
     """Genera `cantidad` semillas conexas y validas para la conjetura.
 
-    Barre tamanos y familias de forma reproducible dado `rng`. Descarta
-    (y reintenta) construcciones desconexas o fuera de banda.
+    Antepone la FAMILIA EXTREMAL garantizada (RA2: donde la conjetura muere, a
+    escala productiva; VACIA para CAL-1, cuya trayectoria no se toca) y luego
+    rellena con el barrido reproducible original (mismo consumo de rng).
     """
     fams = familias_semilla(conj)
     out: List[nx.Graph] = []
+    for Gx in _semillas_extremal(conj, n_min, n_max):
+        try:
+            H = norm(Gx)
+        except Exception:
+            continue
+        if valido(H, n_min, n_max, requiere_conexo=True):
+            out.append(H)
     intentos = 0
     max_intentos = cantidad * 20 + 50
     while len(out) < cantidad and intentos < max_intentos:
@@ -453,7 +497,7 @@ def semillas(conj: str, rng, cantidad: int,
             continue
         if valido(G, n_min, n_max, requiere_conexo=True):
             out.append(G)
-    # Garantiza al menos un camino y una estrella (semillas triviales seguras).
+    # Garantiza al menos una semilla trivial segura (camino).
     if not out:
         out.append(norm(nx.path_graph((n_min + n_max) // 2)))
     return out[:cantidad]
