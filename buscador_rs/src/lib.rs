@@ -25,6 +25,7 @@ pub mod spectral;
 pub mod invariants;
 pub mod evaluators;
 pub mod paritycheck;
+pub mod batch;
 pub mod operators;
 pub mod seeds;
 pub mod amcs;
