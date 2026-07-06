@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Configuracion por defecto del orquestador evolutivo.
+
+Un unico dict `CONFIG` con los hiperparametros que mapean a las decisiones de
+DISENO.md. La CLI de orquestar.py sobreescribe cualquiera de estos por flag; este
+archivo es la fuente de verdad para corridas reproducibles y para el dashboard.
+"""
+
+CONFIG = {
+    # --- alcance de la corrida ---
+    "conjeturas": ["cal1", "cal2", "cal3"],
+    "iters": 400,               # mutaciones por conjetura
+    "semilla": 7,               # RNG global (reproducibilidad CI)
+
+    # --- islas + archivo MAP-Elites (decision 3) ---
+    "islas": 5,
+    "reset_cada": 40,           # hard-reset de la peor mitad cada R iters
+    "semillas_por_isla": 6,
+    "density_bins": 8,          # cuantizacion del eje densidad de la celda
+
+    # --- bandit Thompson descontado (decision 4) ---
+    "gamma": 0.99,
+
+    # --- muestreo de padres por novedad (decision 6) ---
+    "lambda_novelty": 4.0,      # pendiente del sigmoid(gap - mediana)
+    "wl_iterations": 3,         # iteraciones del hash Weisfeiler-Lehman
+
+    # --- operadores (decision 5) ---
+    "trees_only": False,        # True = solo add_leaf/subdivide/prune*
+
+    # --- cascada de evaluacion (decision 1) ---
+    "umbral_candidato": 1e-9,   # gap>umbral -> candidato a certificar (T3)
+    "forzar_python_eval": False,  # True en plataformas sin el binario Rust
+    "cert_al_vuelo": True,      # correr T3 sobre candidatos durante la corrida
+
+    # --- backend de mutacion (decision 7) ---
+    "llm": "mock",              # "mock" (CI) | "ollama" (opt-in)
+    "ollama": {
+        "api_base": "http://localhost:11434/v1",
+        "model": "gemma3:4b",
+        "api_key": "ollama",
+        "n_best_of": 4,         # best-of-N deltas por mutacion LLM
+        "k_fewshot": 3,         # elites en el prompt (rango ordinal)
+        "timeout_s": 60.0,
+    },
+
+    # --- salida ---
+    "out": "calibracion/runs/orq_log.csv",  # esquema ga_graphs.py (dashboard)
+
+    # --- banda de tamano (paridad con ga_graphs.py) ---
+    "n_min": 10,
+    "n_max": 40,
+}
