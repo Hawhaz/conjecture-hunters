@@ -20,6 +20,9 @@ fn main() {
         if raw.first().map(String::as_str) == Some("paridad") {
             return subcomando_paridad(&raw[1..]);
         }
+        if raw.first().map(String::as_str) == Some("evaluar") {
+            return subcomando_evaluar(&raw[1..]);
+        }
     }
 
     let mut cfg = Config::default();
@@ -189,6 +192,88 @@ fn subcomando_paridad(args: &[String]) {
             std::process::exit(1);
         }
     }
+}
+
+/// Subcomando para el orquestador: lee g6 (--corpus o stdin), evalúa en LOTE
+/// PARALELO y emite `g6,n,gap,contraejemplo`. Es el interfaz rápido que el loop
+/// Python invoca por subprocess (sin PyO3, sin riesgo dlltool).
+fn subcomando_evaluar(args: &[String]) {
+    use std::io::Read;
+    let mut eval = Eval::Cal1;
+    let mut corpus: Option<String> = None;
+    let mut umbral = 1e-9f64;
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--eval" => {
+                i += 1;
+                if let Some(v) = args.get(i) {
+                    eval = Eval::parse(v).unwrap_or_else(|| {
+                        eprintln!("--eval inválido: {v} (cal1|cal2|cal3)");
+                        std::process::exit(2);
+                    });
+                }
+            }
+            "--corpus" => {
+                i += 1;
+                corpus = args.get(i).cloned();
+            }
+            "--umbral" => {
+                i += 1;
+                if let Some(v) = args.get(i) {
+                    umbral = v.parse().unwrap_or(umbral);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+
+    let raw = match &corpus {
+        Some(p) => fs::read_to_string(p).unwrap_or_else(|e| {
+            eprintln!("[evaluar] no pude leer {p}: {e}");
+            std::process::exit(1);
+        }),
+        None => {
+            let mut s = String::new();
+            std::io::stdin().read_to_string(&mut s).ok();
+            s
+        }
+    };
+
+    let mut etiquetas: Vec<String> = Vec::new();
+    let mut grafos: Vec<buscador_rs::graph::Graph> = Vec::new();
+    for linea in raw.lines() {
+        let s = linea.trim();
+        if s.is_empty() {
+            continue;
+        }
+        match buscador_rs::graph::Graph::from_graph6(s) {
+            Ok(g) => {
+                etiquetas.push(s.to_string());
+                grafos.push(g);
+            }
+            Err(_) => eprintln!("[evaluar] g6 inválido ignorado: {s}"),
+        }
+    }
+
+    let gaps = buscador_rs::batch::eval_batch(&grafos, eval);
+    println!("g6,n,gap,contraejemplo");
+    let mut n_contra = 0usize;
+    for ((s, g), gap) in etiquetas.iter().zip(&grafos).zip(&gaps) {
+        let contra = *gap > umbral;
+        if contra {
+            n_contra += 1;
+        }
+        println!("{s},{},{gap:.12},{contra}", g.n);
+    }
+    eprintln!(
+        "[evaluar] eval={} grafos={} contraejemplos={} hilos={}",
+        eval.nombre(),
+        grafos.len(),
+        n_contra,
+        rayon::current_num_threads()
+    );
 }
 
 fn print_help() {
