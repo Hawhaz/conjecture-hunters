@@ -114,12 +114,32 @@ certificado entero de F₂.
 
 ## Nota de honestidad
 
-El PDF primario de Aouchiche–Hansen 2016 (paywall) no se pudo abrir directamente;
-el enunciado exacto que refutamos es el de **Jia–Song 2018, Conjetura 1**,
-confirmado **verbatim** en el survey abierto de 2024 y su estado ABIERTO
-corroborado por la fuente libre Lin–Das–Wu. Un único contraejemplo (F₂, n=5) ya
-refuta la conjetura; la familia `K₁∨2Kᵣ` la refuta de forma fuerte (infinitos
-contraejemplos).
+**Qué es propio y qué se tomó de la literatura.** El **contraejemplo** (F₂ y la
+familia `K₁∨2Kᵣ`) lo **halló y demostró nuestro sistema** por cómputo exacto — no
+se copió de ninguna fuente. De la literatura sólo se tomó el **enunciado** de la
+conjetura (paso legítimo: hay que saber qué se refuta).
+
+**Verificación de fuente primaria (leída directamente).** El primario abierto
+Jia–Song 2018 (*J. Inequal. Appl.* 2018:69, DOI 10.1186/s13660-018-1663-5)
+enuncia esto como su **Conjecture 3.8** (el survey de 2024 lo renumera
+**Conjecture 1**). Su lado derecho coincide **verbatim** con `B(n)`. Pero el
+primario declara igualdad en **`Kₙ − 2e`** (dos aristas de un emparejamiento),
+mientras que — por cómputo exacto — `ρ+∂₂(Kₙ−2e) = n/(n−1) ≠ B(n)`, y el grafo
+que sí alcanza `B(n)` es **`Kₙ − e`** (la versión del survey). Es una
+**inconsistencia de transcripción en el caso de igualdad** entre primario y
+survey. **No afecta la refutación:** nosotros refutamos la **desigualdad**
+`ρ+∂₂ ≥ B(n)` con `F₂ ∉ {Kₙ, Kₙ−e}`, robusta a cómo se lea la igualdad.
+Reproducible: `python retos/verificacion_fuente_primaria.py`.
+
+**Estado / novedad.** El survey de 2024 (el catálogo más reciente y completo, del
+propio fundador del tema) la presenta como **Conjecture 1 ABIERTA**, sin
+contraejemplo (líneas 1087–1093; el único "counterexample" del survey es de otro
+tema, torneos bipartitos). Lin–Das–Wu 2016 probaron sólo las hermanas `ρ+∂₃`,
+`ρ+∂_⌊7D/8⌋`. No se halló refutación previa. Esto es **evidencia fuerte de
+novedad, no certeza absoluta**: una búsqueda de literatura nunca es exhaustiva, y
+el margen minúsculo en `n=5` (0.002) obliga a cautela. Un único contraejemplo
+(F₂) ya refuta la conjetura; `K₁∨2Kᵣ` la refuta de forma fuerte (infinitos, con
+margen creciente).
 
 ---
 
