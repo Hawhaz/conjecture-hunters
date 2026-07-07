@@ -10,9 +10,9 @@ COPY . .
 # Verificación al construir la imagen: la suite TDD debe estar verde
 RUN python -m pytest -q || (echo "pytest rojo: imagen inválida" && exit 1)
 
-# Por defecto: humo del GA de calibración (CAL-1 cae en segundos y escribe CSV)
-# Otros modos documentados en el README:
+# Por defecto: demo del sistema (resultado estrella + gate de 20 carriles + enjambre).
+# Otros modos:
 #   pytest              -> python -m pytest
-#   mock LLM            -> python -m mock_llm.server --port 8000
-#   loop evolutivo      -> openevolve-run calibracion/programa_inicial.py evaluators/agx_l1_mu.py --config configs/calibracion.yaml
-CMD ["python", "calibracion/ga_graphs.py", "--runs", "3", "--gens", "300", "--out", "/app/calibracion/runs/ga_docker.csv"]
+#   solo el gate        -> python retos/pack_extra.py --gate
+#   run GPU (AMD MI300X)-> bash deploy/run_gpu.sh --trust-amd-proxy --serve-gemma
+CMD ["sh", "deploy/demo.sh"]

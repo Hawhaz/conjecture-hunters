@@ -1,0 +1,12 @@
+.git
+**/__pycache__
+**/*.pyc
+buscador_rs/target
+finetune/data
+hallazgos/shards
+hallazgos/HIT_*.md
+hallazgos/ALERTAS.md
+benchmarks/history
+entrega/slide-*.jpg
+entrega/*.pdf
+*.log
