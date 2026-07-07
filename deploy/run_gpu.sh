@@ -89,8 +89,9 @@ fi
 
 # --- 5) ENJAMBRE: satura TODOS los cores cazando las 20 conjeturas + ledger --
 MINS="${MINS:-210}"   # ~3.5 h de la ventana de 4 h (deja margen para serve/LoRA)
-log "lanzando ENJAMBRE: todos los cores, ${MINS} min, ledger durable activo..."
-python orquestador/enjambre.py --minutos "$MINS" --workers 0
+GEMMA_FLAG=""; [ "$DO_GEMMA" = 1 ] && GEMMA_FLAG="--gemma"   # Gemma como mutador si esta servida
+log "lanzando ENJAMBRE: todos los cores, ${MINS} min, gemma=${DO_GEMMA}, ledger activo..."
+python orquestador/enjambre.py --minutos "$MINS" --workers 0 $GEMMA_FLAG
 log "resumen de hallazgos:"; python hallazgos/registro.py --resumen || true
 # (Gemma como mutador mas inteligente: el enjambre usa busqueda local rapida; con
 #  --serve-gemma vLLM queda en :8000 y el mutador puede consultarlo — enhancement.)
