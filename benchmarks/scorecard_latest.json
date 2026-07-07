@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-07-06T19:05:49",
+  "git": "e99401c",
+  "metricas": {
+    "paridad_1e9": {
+      "status": "ok",
+      "max_abs_diff": 8.356e-12,
+      "flips": 0,
+      "seconds": 4.1
+    },
+    "throughput_evaluador": {
+      "status": "ok",
+      "evals_per_sec": 10056.2,
+      "n_grafos": 3000,
+      "seconds": 0.3
+    },
+    "cal1_descubrimiento": {
+      "status": "ok",
+      "certifica": true,
+      "best_gap": 0.22631414,
+      "n": 23,
+      "seconds": 5.67
+    },
+    "cal2_descubrimiento": {
+      "status": "ok",
+      "certifica": true,
+      "best_gap": 0.49174851,
+      "n": 40,
+      "seconds": 5.01
+    },
+    "cal3_reto_n203": {
+      "status": "ok",
+      "certificado_n203": true,
+      "margen": 0.0002849626989959758,
+      "contraejemplos_familia": 11,
+      "seconds": 17.14
+    },
+    "jia_song_refutacion": {
+      "status": "ok",
+      "refuta_exacto": true,
+      "familia_r_2_30": true,
+      "min_n": 5,
+      "seconds": 4.07
+    },
+    "conjetura_mejorada": {
+      "status": "ok",
+      "corre": true,
+      "seconds": 10.82
+    }
+  }
+}
