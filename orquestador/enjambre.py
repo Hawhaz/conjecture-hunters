@@ -190,15 +190,21 @@ def main():
     ap.add_argument("--workers", type=int, default=0)
     ap.add_argument("--solo-abiertas", action="store_true")
     ap.add_argument("--gemma", action="store_true", help="Gemma como mutador (env CONJ_API_BASE)")
+    ap.add_argument("--gemma-workers", type=int, default=-1,
+                    help="cuantos workers usan Gemma (satura GPU); el resto saturan cores. def=W/4")
     args = ap.parse_args()
 
     W = args.workers or cpu_count()
-    endpoint = os.environ.get("CONJ_API_BASE", "(ninguno -> fallback local)")
+    gw = 0
+    if args.gemma:
+        gw = args.gemma_workers if args.gemma_workers >= 0 else max(1, W // 4)
+    endpoint = os.environ.get("CONJ_API_BASE", "(ninguno)")
     print(f"ENJAMBRE: {W} workers (cores={cpu_count()}) · {len(ALL_LANES)} carriles · "
-          f"{args.minutos} min · gemma={args.gemma} · endpoint={endpoint}")
+          f"{args.minutos} min · gemma_workers={gw}/{W} (resto saturan cores) · endpoint={endpoint}")
     t0 = time.time()
     with Pool(processes=W) as pool:
-        res = pool.map(worker, [(1000 + i, args.minutos, args.solo_abiertas, args.gemma)
+        # primeros gw workers = Gemma (GPU); el resto = busqueda local (satura CPU)
+        res = pool.map(worker, [(1000 + i, args.minutos, args.solo_abiertas, i < gw)
                                 for i in range(W)])
     dt = time.time() - t0
     ev = sum(r[0] for r in res); hits = sum(r[1] for r in res)
