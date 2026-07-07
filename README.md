@@ -4,6 +4,26 @@
 
 Built for the **AMD Developer Hackathon: ACT II** (Track 3 — Unicorn). The system evolves *programs that print graphs*; a frozen evaluator computes spectral invariants and rewards proximity to refuting published mathematical conjectures. An LLM (Gemma via Fireworks AI / AMD Developer Cloud, or local Ollama) acts as the mutation operator inside an OpenEvolve loop.
 
+## 🏆 The system works — it refuted an OPEN conjecture (and improved it)
+
+The engine did the exact thing it was built to do: it produced a **new, exactly-certified mathematical result**, not just re-discoveries of known ones.
+
+> **Refuted — Jia–Song (2018) Conjecture 3.8**, catalogued as **Conjecture 1** (open) in the Aouchiche–Rather 2024 survey (arXiv:2310.12777).
+> The published bound `ρ + ∂₂ ≥ n/(n−1) + (n−1−√((n−1)²+8))/2` is **false**.
+
+- **Infinite family of counterexamples** `K₁ ∨ 2Kᵣ`, found by our fast exact search sweeping dense families. The smallest is the **friendship graph F₂ (n=5)**: `ρ+∂₂ = 4−√41⁄2 ≈ 0.79844 < 0.80051 = B(5)`.
+- **Exact, un-gameable proof** — integer certificate `59² = 3481 > 3456`; decided over algebraic numbers for all `r∈[2,30]`, margin growing `0.002 → 0.152`. **Zero floating point** in the verdict.
+- **Independently verified** (disjoint 2nd method) and **cross-checked against the primary paper** — which even revealed a transcription error in the published *equality* case (it names `Kₙ−2e`, but `Kₙ−2e` does **not** attain the bound; `Kₙ−e` does).
+- **Not just broken — improved**: the true minimizer is the balanced two-clique join `T(n)=K₁∨(Kₐ∪K_b)`, yielding a corrected sharp bound `B'(n)`.
+
+```bash
+python retos/refutacion_jia_song.py            # the refutation: exact table + integer certificate
+python retos/verificacion_fuente_primaria.py   # primary-source cross-check (equality-case discrepancy)
+python retos/verificacion_independiente.py     # disjoint second method — PASS
+```
+
+*Honest scope: the mathematics is **certain** and self-verifiable in seconds; the counterexample is **our own computation** (not copied — only the conjecture's statement comes from the literature). "First to refute" is **strong evidence** — the 2024 survey lists it open with no counterexample — **not** a claim of absolute certainty, since a literature search is never exhaustive.*
+
 ## Why it matters
 
 Refuting a conjecture requires exhibiting ONE verifiable counterexample — a perfect fit for search + cheap verification. This repo re-discovers, from scratch and in seconds, results that took neural networks 5,000 iterations (Wagner 2021) and the state-of-the-art AMCS algorithm 46 seconds (Vito–Stefanus 2023):
@@ -54,6 +74,11 @@ evaluators/toy_max_edges.py loop smoke-test evaluator (known optimum = 30)
 calibracion/ga_graphs.py   direct GA (no LLM): validates search dynamics; CSV logs
 calibracion/amcs_baseline.py faithful Python port of AMCS (arXiv 2306.07956) — SOTA as population seed
 mock_llm/server.py         deterministic OpenAI-compatible mock (round-robin canned diffs)
+buscador_rs/               Rust search engine (rayon, faer): GA/AMCS, 31× faster, bit-parity to 1e-9
+orquestador/               island DB + Thompson bandit + evaluation cascade (validity → Rust batch → exact cert)
+certificados/verify.py     proof-grade certificate (sympy Sturm / mpmath+Weyl) — the un-gameable verdict
+retos/                     OPEN-conjecture results: Jia–Song refutation, corrected bound, verifiers
+benchmarks/scorecard.py    re-runnable capability scorecard (7/7 OK) — proves each change improves, not regresses
 tests/                     the spec, frozen: levels 0–3 + published-counterexample fixtures
 configs/                   OpenEvolve configs (mock / Ollama / Fireworks-MI300X)
 docs/                      design specs (calibration vertical + conjecture portfolio)
