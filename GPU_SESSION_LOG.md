@@ -42,5 +42,8 @@ This file is a transparent, timestamped record of what was run on AMD hardware f
 | timestamp (local) | step | detail |
 |---|---|---|
 | 2026-07-07 | session start | Opened notebooks.amd.com; reached AMD SSO sign-in (ROCm / JupyterLab / on-demand). Awaiting manual login by team lead. |
+| 2026-07-07 | logged in + launched | Team team-3592. Launched the generic **ROCm 7.2 + vLLM 0.16.0 + PyTorch 2.9** notebook (NOT the "SH Dev Day / Qwen3-4B / vERL" sample). Opened a terminal (root@/workspace). |
+| 2026-07-07 | network gotcha | Outbound HTTPS is MITM-proxied by `AMD_ONECLICK_OPENCODE_TLS_PROXY` (10.98.140.215:8443) with a **self-signed cert** → git/pip/HuggingFace cert verification fails. System clock OK. TLS-weakening (`sslVerify=false`) was correctly blocked; the safe fix (trust the AMD proxy root CA — verification stays ON) is documented in `RUNBOOK_MI300X.md` / `deploy/run_gpu.sh --trust-amd-proxy`. |
+| 2026-07-07 | paused (budget) | **Stopped the session** to preserve the 4h/24h quota — the pack/ledger/tests are CPU-only and already pass locally, so no need to burn GPU time on them. Turnkey `deploy/run_gpu.sh` + runbook written. Will relaunch for the **Gemma-on-vLLM + LoRA** run (the only GPU-worthy part) once the 11 new lanes + orchestrator wiring are done. |
 
 _(appended as the session proceeds)_
