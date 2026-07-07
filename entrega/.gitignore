@@ -1,0 +1,5 @@
+build_run.js
+*.pdf
+slide-*.jpg
+chk-*.jpg
+node_modules/
