@@ -1,0 +1,26 @@
+# finetune/requirements.txt — dependencias del pipeline LoRA (MI300X / ROCm).
+#
+# NO instalar estas en la maquina de desarrollo (Windows): cosechar.py corre
+# SOLO con networkx/numpy + el orquestador (ya en el requirements.txt raiz).
+# Estas dependencias son para la MI300X, donde se entrena y se sirve el modelo.
+#
+# ---------------------------------------------------------------------------
+# PASO 0 (MI300X, ROCm): instalar torch con ruedas ROCm ANTES que el resto.
+# Ajusta la version de ROCm (rocm6.2) a la del host de notebooks.amd.com.
+#   pip install --index-url https://download.pytorch.org/whl/rocm6.2 torch
+# Verifica:  python -c "import torch; print(torch.cuda.is_available())"  -> True
+# (torch NO se lista abajo a proposito: su rueda depende del indice ROCm, no de PyPI.)
+# ---------------------------------------------------------------------------
+
+transformers>=4.50.0     # gemma-3 (Gemma3ForCausalLM) requiere transformers reciente
+peft>=0.13.0             # LoraConfig / PeftModel / merge_and_unload
+trl>=0.12.0              # SFTTrainer + SFTConfig (packing, chat template)
+datasets>=2.20.0         # load_dataset("json", ...) del sft_mutador.jsonl
+accelerate>=0.34.0       # device_map="auto", entrenamiento distribuido
+sentencepiece>=0.2.0     # tokenizer de Gemma
+safetensors>=0.4.0       # serializacion de pesos (adapter y merge)
+
+# Serving (opcional pero recomendado para apuntar el orquestador):
+#   pip install vllm   # rueda ROCm de vLLM en la MI300X; sirve /v1 OpenAI-compat.
+# NOTA: NO usamos bitsandbytes/QLoRA: la MI300X tiene 192GB HBM y entrenamos en
+# bf16 puro (bitsandbytes no es de primera clase en ROCm de todos modos).

@@ -23,6 +23,7 @@ few-shot LLM. meta es un dict con {"backend","op","detalle"} para logging.
 from __future__ import annotations
 
 import json
+import os
 import re
 import urllib.error
 import urllib.request
@@ -33,6 +34,35 @@ import networkx as nx
 from . import grafos as G
 
 Arm = Tuple[str, str]
+
+# ---------------------------------------------------------------------------
+# Configuracion multi-backend (decision 7, extendida): el backend LLM apunta a
+# CUALQUIER endpoint OpenAI-compatible via variables de entorno. Un solo switch
+# de config lleva la MISMA ruta de codigo de Ollama (hoy) a Fireworks o a
+# vLLM-en-MI300X (fine-tuned). Los defaults reproducen Ollama local exactamente,
+# asi que sin env-vars el comportamiento es identico al historico (tests intactos).
+#   CONJ_API_BASE  -> http://localhost:11434/v1  | https://api.fireworks.ai/inference/v1
+#                     | http://<host-mi300x>:8000/v1
+#   CONJ_MODEL     -> gemma3:4b | accounts/fireworks/models/gemma-3-4b-it | <adapter>
+#   CONJ_API_KEY   -> (vacio para Ollama) | $FIREWORKS_API_KEY | EMPTY para vLLM
+# El transporte sigue siendo urllib puro (sin SDK), igual que prompts/ollama_cliente.py.
+# ---------------------------------------------------------------------------
+_DEFAULT_API_BASE = "http://localhost:11434/v1"
+_DEFAULT_MODEL = "gemma3:4b"
+_DEFAULT_API_KEY = "ollama"
+
+
+def _cfg_api_base() -> str:
+    return os.environ.get("CONJ_API_BASE", _DEFAULT_API_BASE).strip() or _DEFAULT_API_BASE
+
+
+def _cfg_model() -> str:
+    return os.environ.get("CONJ_MODEL", _DEFAULT_MODEL).strip() or _DEFAULT_MODEL
+
+
+def _cfg_api_key() -> str:
+    # Fireworks exige Bearer; vLLM acepta cualquiera ("EMPTY"); Ollama lo ignora.
+    return os.environ.get("CONJ_API_KEY", _DEFAULT_API_KEY)
 
 
 # ---------------------------------------------------------------------------
@@ -77,17 +107,20 @@ def _parsear_delta(texto: str) -> Tuple[List[Tuple[int, int]], List[Tuple[int, i
 class Mutador:
     def __init__(self, backend: str = "mock",
                  trees_only: bool = False,
-                 api_base: str = "http://localhost:11434/v1",
-                 model: str = "gemma3:4b",
-                 api_key: str = "ollama",
+                 api_base: Optional[str] = None,
+                 model: Optional[str] = None,
+                 api_key: Optional[str] = None,
                  n_llm: int = 4,
                  k_fewshot: int = 3,
                  timeout_s: float = 60.0):
         self.backend = backend.lower().strip()
         self.trees_only = trees_only
-        self.api_base = api_base
-        self.model = model
-        self.api_key = api_key
+        # Precedencia: argumento EXPLICITO > variable de entorno > default Ollama.
+        # Pasar api_base="..." (como hacen los tests) SIEMPRE gana sobre el env,
+        # asi el fallback-a-mock con puerto imposible sigue siendo determinista.
+        self.api_base = api_base if api_base is not None else _cfg_api_base()
+        self.model = model if model is not None else _cfg_model()
+        self.api_key = api_key if api_key is not None else _cfg_api_key()
         self.n_llm = n_llm
         self.k_fewshot = k_fewshot
         self.timeout_s = timeout_s
@@ -127,10 +160,30 @@ class Mutador:
             return None, meta
         return G.g6_of(hijo), meta
 
-    # ---- backend ollama ----------------------------------------------------
+    # ---- backend LLM (Ollama / Fireworks / vLLM-MI300X) --------------------
     def _ollama_disponible(self) -> bool:
+        """Sonda de alcanzabilidad del endpoint (cacheada). Backend-agnostica.
+
+        Prueba primero el estandar OpenAI `/v1/models` CON el header Authorization
+        (asi Fireworks y vLLM-en-MI300X responden), y si eso falla intenta la
+        sonda especifica de Ollama `/api/tags`. Cualquiera que responda marca el
+        endpoint vivo; si ninguna responde, el backend cae a `mock` (nunca crashea).
+        El nombre se conserva para no tocar los sitios de llamada historicos.
+        """
         if self._ollama_vivo is not None:
             return self._ollama_vivo
+        # 1) sonda OpenAI-compatible: /v1/models con Bearer (Fireworks/vLLM/Ollama).
+        try:
+            req = urllib.request.Request(
+                self.api_base.rstrip("/") + "/models",
+                headers={"Authorization": "Bearer %s" % self.api_key},
+                method="GET")
+            with urllib.request.urlopen(req, timeout=3.0):
+                self._ollama_vivo = True
+                return self._ollama_vivo
+        except Exception:
+            pass
+        # 2) sonda especifica de Ollama: /api/tags (sin /v1, sin auth).
         try:
             req = urllib.request.Request(
                 self.api_base.rstrip("/").rsplit("/v1", 1)[0] + "/api/tags",
@@ -138,14 +191,7 @@ class Mutador:
             with urllib.request.urlopen(req, timeout=3.0):
                 self._ollama_vivo = True
         except Exception:
-            # sonda alternativa: intentar /v1/models
-            try:
-                req = urllib.request.Request(
-                    self.api_base.rstrip("/") + "/models", method="GET")
-                with urllib.request.urlopen(req, timeout=3.0):
-                    self._ollama_vivo = True
-            except Exception:
-                self._ollama_vivo = False
+            self._ollama_vivo = False
         return self._ollama_vivo
 
     def _construir_prompt(self, elite_g6: str, isla, conj: str) -> Tuple[str, str]:
