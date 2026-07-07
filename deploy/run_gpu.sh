@@ -87,13 +87,11 @@ if [ "$DO_GEMMA" = 1 ]; then
   export CONJ_LLM="openai"
 fi
 
-# --- 5) HUNT multi-carril + Gemma + ledger (miles de workers en el nodo) -----
-log "lanzando el hunt (iters=$ITERS por carril, backend=${CONJ_LLM:-mock})..."
-# batería paralela sobre los carriles validados (Rust/Python), ledger activo:
-python retos/pack_conjeturas.py
-# TODO(#37): orquestador Gemma-guiado por-carril sobre el pack (envolver
-#   orquestador/orquestar.py con los carriles de retos/pack_conjeturas.py).
-# Ejemplo con los carriles CAL ya integrados + Gemma:
-#   python orquestador/orquestar.py --conjeturas cal1 --iters "$ITERS" \
-#     --llm "${CONJ_LLM:-mock}" --islas 8 --out /tmp/hunt_cal1.csv
+# --- 5) ENJAMBRE: satura TODOS los cores cazando las 20 conjeturas + ledger --
+MINS="${MINS:-210}"   # ~3.5 h de la ventana de 4 h (deja margen para serve/LoRA)
+log "lanzando ENJAMBRE: todos los cores, ${MINS} min, ledger durable activo..."
+python orquestador/enjambre.py --minutos "$MINS" --workers 0
+log "resumen de hallazgos:"; python hallazgos/registro.py --resumen || true
+# (Gemma como mutador mas inteligente: el enjambre usa busqueda local rapida; con
+#  --serve-gemma vLLM queda en :8000 y el mutador puede consultarlo — enhancement.)
 log "hecho. Hallazgos -> hallazgos/  (ALERTAS.md, HIT_*.md, shards/)."
